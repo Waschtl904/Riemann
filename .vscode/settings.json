@@ -12,5 +12,6 @@
         "tests"
     ],
     "workbench.settings.useSplitJSON": false,
-    "workbench.settings.openDefaultSettings": false
+    "workbench.settings.openDefaultSettings": false,
+    "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
 }
