@@ -19,35 +19,34 @@ Beispiele (Terminal):
 import sys
 import ast
 import argparse
+from functools import lru_cache
 import mpmath as mp
-from typing import Any
+from typing import Any, Union
+
+Number = Union[float, complex]
 
 
-def zeta(
-    s: complex | float | int | Any, precision: int = 50, verbose: bool = False
-) -> Any:
+@lru_cache(maxsize=128)
+def zeta(s: Any, precision: int = 50) -> Any:
     """
-    Berechnet die Riemannsche Zetafunktion ζ(s).
+    Berechnet die Riemannsche Zetafunktion ζ(s) mit mpmath und Cache.
 
-    :param s: Komplexe oder reelle Zahl (z.B. 0.5+14.1347j oder 2)
-    :param precision: Dezimalstellen für Berechnung (Standard: 50)
-    :param verbose: Bei True werden zusätzliche Infos ausgegeben
-    :return: Wert von ζ(s) als mpmath.mpc
-    :raises TypeError: bei ungültigem Eingabetyp
+    :param s: Komplexe oder reelle Zahl
+    :param precision: Dezimalstellen
+    :return: mpmath.mpc Wert von ζ(s)
+    :raises ValueError: Wenn s == 1 (Polstelle)
     """
-    # Typprüfung und Konvertierung
+    if isinstance(s, (int, float, complex)) and mp.almosteq(s, 1.0):
+        raise ValueError(
+            "ζ(s) hat eine Polstelle bei s = 1 und kann hier nicht ausgewertet werden."
+        )
+
+    # Typkonvertierung zu mpmath
     if isinstance(s, complex):
         s = mp.mpc(s.real, s.imag)
-    elif isinstance(s, (float, int)):
+    else:
         s = mp.mpf(s)
-    elif not isinstance(s, (mp.mpf, mp.mpc)):
-        raise TypeError(f"Ungültiger Eingabetyp: {type(s)}")
 
-    # Debug-Info
-    if verbose:
-        print(f"[INFO] Berechne ζ({s}) mit {precision} Dezimalstellen", file=sys.stderr)
-
-    # Berechnung im Präzisionskontext
     with mp.workdps(precision):
         return mp.zeta(s)
 
@@ -55,10 +54,6 @@ def zeta(
 def format_result(val: Any, digits: int = 6) -> str:
     """
     Formatiert das Ergebnis als komplexe Zahl mit fester Genauigkeit.
-
-    :param val: Ergebniswert (mpmath.mpf oder mpc)
-    :param digits: Nachkommastellen für Ausgabe (Standard: 6)
-    :return: formatierter String, z.B. '0.123457 + 1.234568j'
     """
     if isinstance(val, mp.mpf):
         return f"{val:.{digits}g}"
@@ -75,18 +70,10 @@ def main() -> None:
     )
     parser.add_argument("s", type=str, help="Stelle s (z.B. 2 oder '0.5+14.1347j')")
     parser.add_argument(
-        "-p",
-        "--prec",
-        type=int,
-        default=50,
-        help="Dezimalstellen für Berechnung (Standard: 50)",
+        "-p", "--prec", type=int, default=50, help="Dezimalstellen für Berechnung"
     )
     parser.add_argument(
-        "-d",
-        "--digits",
-        type=int,
-        default=6,
-        help="Nachkommastellen für Ausgabe (Standard: 6)",
+        "-d", "--digits", type=int, default=6, help="Nachkommastellen für Ausgabe"
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Ausführliche Ausgabe"
@@ -98,7 +85,12 @@ def main() -> None:
 
     try:
         s_val = ast.literal_eval(args.s)
-        result = zeta(s_val, precision=args.prec, verbose=args.verbose)
+        result = zeta(s_val, precision=args.prec)
+        if args.verbose:
+            print(
+                f"[INFO] Berechne ζ({s_val}) mit {args.prec} Dezimalstellen",
+                file=sys.stderr,
+            )
         if args.raw:
             print(result)
         else:
