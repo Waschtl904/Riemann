@@ -1,51 +1,34 @@
 #!/usr/bin/env python3
 """
 zeta.py – Berechnet die Riemannsche Zetafunktion ζ(s) mit mpmath.
-
-Beispiele (Python):
-    >>> from zeta import zeta, format_result
-    >>> val = zeta(2, precision=80)
-    >>> print(format_result(val, digits=10))
-    1.6449340668
-
-Beispiele (Terminal):
-    $ python zeta.py "0.5+14.1347j" -p 80 -d 8 -v
-    [INFO] Berechne ζ(0.5 + 14.1347j) mit 80 Dezimalstellen
-    2.46599e-15 + 4.44089e-16j
-    $ python zeta.py "2" --raw
-    (1.6449340668482264364724151666460251892189499012068 + 0.0j)
 """
 
 import sys
 import ast
 import argparse
-from functools import lru_cache
+from typing import Any
+
 import mpmath as mp
-from typing import Any, Union
-
-Number = Union[float, complex]
 
 
-@lru_cache(maxsize=128)
-def zeta(s: Any, precision: int = 50) -> Any:
+def zeta(s: Any, precision: int = 50, verbose: bool = False) -> Any:
     """
-    Berechnet die Riemannsche Zetafunktion ζ(s) mit mpmath und Cache.
+    Berechnet die Riemannsche Zetafunktion ζ(s).
 
-    :param s: Komplexe oder reelle Zahl
-    :param precision: Dezimalstellen
-    :return: mpmath.mpc Wert von ζ(s)
-    :raises ValueError: Wenn s == 1 (Polstelle)
+    :param s: Komplexe oder reelle Zahl (z.B. 0.5+14.1347j oder 2)
+    :param precision: Dezimalstellen für Berechnung (Standard: 50)
+    :param verbose: Bei True werden zusätzliche Infos ausgegeben
+    :return: Wert von ζ(s) als mpmath-Zahl (mpf oder mpc)
     """
-    if isinstance(s, (int, float, complex)) and mp.almosteq(s, 1.0):
-        raise ValueError(
-            "ζ(s) hat eine Polstelle bei s = 1 und kann hier nicht ausgewertet werden."
-        )
-
-    # Typkonvertierung zu mpmath
     if isinstance(s, complex):
         s = mp.mpc(s.real, s.imag)
-    else:
+    elif isinstance(s, (float, int)):
         s = mp.mpf(s)
+    elif not isinstance(s, (mp.mpf, mp.mpc)):
+        raise TypeError(f"Ungültiger Eingabetyp: {type(s)}")
+
+    if verbose:
+        print(f"[INFO] Berechne ζ({s}) mit {precision} Dezimalstellen", file=sys.stderr)
 
     with mp.workdps(precision):
         return mp.zeta(s)
@@ -54,14 +37,18 @@ def zeta(s: Any, precision: int = 50) -> Any:
 def format_result(val: Any, digits: int = 6) -> str:
     """
     Formatiert das Ergebnis als komplexe Zahl mit fester Genauigkeit.
+
+    :param val: Ergebniswert (mpmath.mpf oder mpc)
+    :param digits: Nachkommastellen für Ausgabe (Standard: 6)
+    :return: formatierter String
     """
     if isinstance(val, mp.mpf):
         return f"{val:.{digits}g}"
-    else:  # mpc
-        real = f"{val.real:.{digits}g}"
-        imag = f"{abs(val.imag):.{digits}g}"
+    else:
+        real_str = f"{val.real:.{digits}g}"
+        imag_str = f"{abs(val.imag):.{digits}g}"
         sign = "+" if val.imag >= 0 else "-"
-        return f"{real} {sign} {imag}j"
+        return f"{real_str} {sign} {imag_str}j"
 
 
 def main() -> None:
@@ -70,10 +57,10 @@ def main() -> None:
     )
     parser.add_argument("s", type=str, help="Stelle s (z.B. 2 oder '0.5+14.1347j')")
     parser.add_argument(
-        "-p", "--prec", type=int, default=50, help="Dezimalstellen für Berechnung"
+        "-p", "--prec", type=int, default=50, help="Dezimalstellen (Standard: 50)"
     )
     parser.add_argument(
-        "-d", "--digits", type=int, default=6, help="Nachkommastellen für Ausgabe"
+        "-d", "--digits", type=int, default=6, help="Nachkommastellen (Standard: 6)"
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Ausführliche Ausgabe"
@@ -85,12 +72,7 @@ def main() -> None:
 
     try:
         s_val = ast.literal_eval(args.s)
-        result = zeta(s_val, precision=args.prec)
-        if args.verbose:
-            print(
-                f"[INFO] Berechne ζ({s_val}) mit {args.prec} Dezimalstellen",
-                file=sys.stderr,
-            )
+        result = zeta(s_val, precision=args.prec, verbose=args.verbose)
         if args.raw:
             print(result)
         else:
