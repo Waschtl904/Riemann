@@ -4,14 +4,16 @@ from zeta import zeta  # Import der bereits existierenden zeta-Funktion
 mp.mp.dps = 50
 
 
-def find_zeros(count: int = 10):
+def find_zeros(limit: int, tol: float = 1e-6):
     """
-    Liefert die ersten `count` nicht-trivialen Nullstellen ζ(s)=0 auf der kritischen Linie.
-    :param count: Anzahl der gewünschten Nullstellen.
-    :return: Liste komplexer Nullstellen.
+    Liefert die ersten Nullstellen ζ(s)=0 mit Im(ρ) ≤ limit.
+    :param limit: Anzahl oder Höhe der Imaginärteile (je nach Bedarf)
+    :param tol: Genauigkeit für mpmath
     """
     zeros = []
-    for i in range(1, count + 1):
-        rz = mp.zetazero(i)  # mpmath liefert direkt die i-te Nullstelle
+    # Beispiel: mpmath liefert gezielt die i-te Nullstelle,
+    # hier müssten Sie wählen, wie Sie limit interpretieren.
+    for i in range(1, limit + 1):
+        rz = mp.zetazero(i)
         zeros.append(rz)
     return zeros

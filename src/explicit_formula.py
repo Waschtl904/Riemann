@@ -1,7 +1,7 @@
 # src/explicit_formula.py
 
 import math
-from zeros import find_zeros
+from src.zeros import find_zeros
 from prime_connection import generate_primes
 
 
