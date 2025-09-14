@@ -140,14 +140,22 @@ def zeta_em(
 
 
 def zeta_euler(
-    s: complex, n_max: int, use_mpmath: bool = False, threshold: Optional[float] = None
+    s: complex,
+    primes: List[int],
+    use_mpmath: bool = False,
+    threshold: Optional[float] = None,
 ) -> complex:
     """
-    Euler‐Produkt ζ(s) ≈ ∏_{p ≤ n_max} (1 - p^{-s})^{-1}.
+    Euler‐Produkt ζ(s) ≈ ∏_{p in primes} (1 - p^{-s})^{-1}.
     Re(s)>1.
+    :param s: Komplexe Zahl, an der die Zetafunktion ausgewertet wird.
+    :param primes: Liste der Primzahlen bis zum gewünschten Maximum.
+    :param use_mpmath: Ob mpmath für hohe Präzision genutzt werden soll.
+    :param threshold: Brich ab, wenn |factor - 1| < threshold.
+    :return: Wert der Zetafunktion als complex.
     """
-    primes = generate_primes(n_max)
     prod = mpc(1) if use_mpmath else 1 + 0j
+
     if use_mpmath:
         mp.mp.dps = max(mp.mp.dps, 80)
         s_mp = mpc(s)
@@ -164,6 +172,7 @@ def zeta_euler(
             if threshold is not None and abs(factor - 1) < threshold:
                 break
             prod *= factor
+
     return prod
 
 
