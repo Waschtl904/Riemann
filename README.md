@@ -51,10 +51,9 @@ Riemann/
 ├── notebooks/                 ← Jupyter-Notebooks zur Analyse
 │   └── 01_zeta_evaluation.ipynb
 ├── src/                       ← Quellcode-Paket
-│   ├── riemann/
-│   │   ├── __init__.py
-│   │   ├── zeta.py            ← Kernfunktionen zur Berechnung
-│   │   └── utils.py           ← Hilfsfunktionen (Plots, Validierung)
+│   ├── __init__.py
+│   ├── zeta.py                ← Kernfunktionen zur Berechnung
+│   └── utils.py               ← Hilfsfunktionen (Plots, Validierung)
 ├── tests/                     ← Unit-Tests
 │   └── test_zeta.py
 ├── .gitignore                 ← Git-Ignorierregeln
@@ -90,7 +89,7 @@ Riemann/
 ## Schnelleinstieg
 
 ```python
-from riemann.zeta import zeta
+from zeta import zeta
 
 # Zetafunktion an der Stelle s = 2
 wert = zeta(2)
@@ -116,7 +115,7 @@ Erstellt einen Plot der Funktionswerte.
   - `real_range` – (min, max) für den Realteil  
   - `imag_range` – (min, max) für den Imaginärteil  
 
-*Weitere Funktionen sind in `src/riemann/utils.py` dokumentiert.*
+*Weitere Funktionen sind in `src/utils.py` dokumentiert.*
 
 ---
 
@@ -128,7 +127,7 @@ Erstellt einen Plot der Funktionswerte.
   ```
 - **Plot einer Real-Schnitt-Analyse**  
   ```python
-  from riemann.utils import plot_real_slice
+  from utils import plot_real_slice
   plot_real_slice(-10, 10, imag=0.5)
   ```
 
