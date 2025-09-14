@@ -33,3 +33,21 @@ def plot_prime_distribution(x_max):
     plt.legend()
     plt.title("Primzahldichte vs. Näherung")
     plt.show()
+
+
+def save_pi_error_plot(pi_df, output_path):
+    """
+    Speichert den Fehlervergleich der π(x)-Methoden als Bild.
+    pi_df: DataFrame mit Spalten 'x', 'error_approx', 'error_explicit'
+    output_path: Pfad zur Ausgabedatei (z.B. 'data/pi_error_plot.png')
+    """
+    plt.figure(figsize=(8, 5))
+    plt.loglog(pi_df["x"], pi_df["error_approx"], label="x/log(x)")
+    plt.loglog(pi_df["x"], pi_df["error_explicit"], label="Explizitformel")
+    plt.xlabel("x")
+    plt.ylabel("Fehler")
+    plt.title("Fehlervergleich der π(x)-Methoden")
+    plt.legend()
+    plt.grid(True, which="both", ls="--")
+    plt.savefig(output_path)
+    plt.close()
