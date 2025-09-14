@@ -1,60 +1,101 @@
-# src/explicit_formula.py
+#!/usr/bin/env python3
+"""
+explicit_formula.py – Berechnung der verallgemeinerten Chebyshev-Funktion ψ(x)
+über die Riemann-Explizitformel und Kontrolle über Primzahlen.
 
-import math
-from src.zeros import find_zeros
+Funktionen:
+- riemann_psi(x, zeros, T=None)
+- pi_explicit(x, zeros, T=None)
+- psi_via_primes(x)
+"""
+from typing import List, Optional
+
+import mpmath as mp
+
+from zeros import find_zeros
 from prime_connection import generate_primes
 
+# Setze Präzision für mpmath (50 Dezimalstellen)
+mp.mp.dps = 50
 
-def riemann_psi(x, zeros, T=None):
+
+def riemann_psi(x: float, zeros: List[complex], T: Optional[float] = None) -> float:
     """
     Berechnet die verallgemeinerte Chebyshev-Funktion ψ(x) über die Riemann-Explizitformel:
-        ψ(x) = x - Σ_{ρ:|Im(ρ)|≤T}(x^ρ/ρ) - log(2π)
+        ψ(x) = x - Σ_{ρ:|Im(ρ)|≤T}(x^ρ / ρ) - log(2π)
+
     Argumente:
-        x     (float): Auswertungsstelle >1
-        zeros (list of complex): Nullstellen ρ mit Im(ρ)>0
-        T     (float): optionaler Im-Grenzwert; falls None, werden alle übergebenen zeros genutzt
+        x      (float): Auswertungsstelle > 1
+        zeros  (List[complex]): Nullstellen ρ mit Im(ρ) > 0
+        T      (Optional[float]): Im-Grenzwert; falls None, werden alle zeros genutzt
+
     Rückgabe:
-        ψ (float)
+        ψ(x) (float)
     """
-    # Hauptterm
-    psi = x
-    # Summe über Nullstellen
+    x_mp = mp.mpf(x)
+    psi_value = x_mp
     for rho in zeros:
         if T is None or abs(rho.imag) <= T:
-            psi -= x**rho / rho
-    # Konstante
-    psi -= math.log(2 * math.pi)
-    return psi.real
+            rho_mp = mp.mpc(rho.real, rho.imag)
+            psi_value -= mp.power(x_mp, rho_mp) / rho_mp
+    psi_value -= mp.log(2 * mp.pi)
+    return float(psi_value.real)
 
 
-def pi_explicit(x, zeros, T=None):
+def pi_explicit(x: float, zeros: List[complex], T: Optional[float] = None) -> float:
     """
     Näherung von π(x) über ψ(x):
         π(x) ≈ ψ(x) / log(x)
+
     Argumente:
-        x     (float): Auswertungsstelle >1
-        zeros (list of complex): Nullstellen ρ
-        T     (float): optionaler Im-Grenzwert für die Explizitformel
+        x      (float): Auswertungsstelle > 1
+        zeros  (List[complex]): Nullstellen ρ
+        T      (Optional[float]): Im-Grenzwert für die Explizitformel
+
     Rückgabe:
-        pi (float)
+        π(x) (float)
     """
-    psi = riemann_psi(x, zeros, T)
-    return psi / math.log(x)
+    psi_value = riemann_psi(x, zeros, T=T)
+    return float(mp.mpf(psi_value) / mp.log(mp.mpf(x)))
 
 
-# Hilfsfunktion: Nullstellen bis Höhe T berechnen (vereinfachtes Beispiel)
-def find_zeros(limit, tol=1e-6):
+def psi_via_primes(x: float) -> float:
     """
-    Platzhalterfunktion: Liefert eine Liste erster nicht-trivialer Nullstellen ρ
-    mit Im(ρ) > 0 bis Im(ρ) ≤ limit.
-    In einer realen Implementierung würde man hier Kontur­integration oder
-    Newton-Verfahren auf ζ(s) einsetzen.
+    Berechnet ψ(x) über die Definition:
+        ψ(x) = Σ_{p^k ≤ x} log(p),
+    wobei für jede Primzahl p die maximale Vielfachheit k bestimmt wird:
+        k = ⌊log(x) / log(p)⌋
+
+    Argumente:
+        x      (float): Auswertungsstelle > 1
+
+    Rückgabe:
+        ψ(x) (float)
     """
-    # Beispielwerte (paar erste Nullstellen)
-    example = [
-        0.5 + 14.134725j,
-        0.5 + 21.022040j,
-        0.5 + 25.010858j,
-        0.5 + 30.424876j,
-    ]
-    return [rho for rho in example if rho.imag <= limit]
+    x_mp = mp.mpf(x)
+    psi_sum = mp.mpf(0)
+    primes = generate_primes(int(x))
+    for p in primes:
+        p_mp = mp.mpf(p)
+        max_k = int(mp.floor(mp.log(x_mp) / mp.log(p_mp)))
+        psi_sum += mp.log(p_mp) * max_k
+    return float(psi_sum)
+
+
+if __name__ == "__main__":
+    X = 100.0
+    T_LIMIT = 50.0
+
+    # Nullstellen bis Imaginarteil ≤ T_LIMIT berechnen
+    zeros_list = find_zeros(limit=int(T_LIMIT))
+
+    # Werte aus Explizit-Formel
+    psi_val = riemann_psi(X, zeros_list, T=T_LIMIT)
+    pi_val = pi_explicit(X, zeros_list, T=T_LIMIT)
+
+    # Kontrolle via Primzahlsumme
+    psi_prime = psi_via_primes(X)
+
+    print(f"ψ({X}) via Explizit-Formel = {psi_val:.6f}")
+    print(f"ψ({X}) via Prime-Summe      = {psi_prime:.6f}")
+    print(f"π({X}) via Explizit-Formel ≈ {pi_val:.6f}")

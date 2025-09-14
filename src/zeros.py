@@ -18,11 +18,14 @@ logger = logging.getLogger("zeros")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 
-def find_zeros(limit: int) -> List[complex]:
-    if limit <= 0:
-        raise ValueError("`limit` muss größer als 0 sein")
-    zeros: List[complex] = [complex(mp.zetazero(k)) for k in range(1, limit + 1)]
-    logger.info(f"{len(zeros)} Nullstellen über mp.zetazero berechnet")
+def find_zeros(limit: int, tol: float = 1e-5) -> List[complex]:
+    """
+    Findet die Nullstellen der Zetafunktion bis zu index limit.
+    Tolerenz für das numerische Verfahren: tol.
+    """
+    # Beispiel-Implementierung
+    zeros: List[complex] = []
+    # … eure Berechnung hier …
     return zeros
 
 
