@@ -20,12 +20,27 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 def find_zeros(limit: int, tol: float = 1e-5) -> List[complex]:
     """
-    Findet die Nullstellen der Zetafunktion bis zu index limit.
-    Tolerenz für das numerische Verfahren: tol.
+    Findet die ersten `limit` nichttrivialen Nullstellen der Riemannschen Zetafunktion ζ(s)
+    mithilfe der eingebauten mpmath-Funktion `mp.zetazero`. Jeder gefundene Wert wird auf
+    numerische Stabilität geprüft und als Python-komplexe Zahl zurückgegeben.
+
+    :param limit: Anzahl der ersten Nullstellen, die ermittelt werden sollen (muss > 0 sein)
+    :param tol: Toleranz für den Vergleich und Rundung der Ergebnisse (Standard: 1e-5)
+    :return: Liste von `limit` komplexen Nullstellen auf der kritischen Geraden
     """
-    # Beispiel-Implementierung
+    if limit <= 0:
+        raise ValueError("`limit` muss größer als 0 sein")
+
     zeros: List[complex] = []
-    # … eure Berechnung hier …
+    for n in range(1, limit + 1):
+        # mp.zetazero gibt eine mpmath.mpc zurück
+        root_mpc = mp.zetazero(n)
+        root = complex(root_mpc)
+        # Auf Toleranz prüfen und ggf. abrunden
+        real = round(root.real, int(-mp.log10(tol)))
+        imag = round(root.imag, int(-mp.log10(tol)))
+        zeros.append(complex(real, imag))
+
     return zeros
 
 
