@@ -13,5 +13,6 @@
     ],
     "workbench.settings.useSplitJSON": false,
     "workbench.settings.openDefaultSettings": false,
-    "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+    "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+    "editor.wordWrap": "on"
 }

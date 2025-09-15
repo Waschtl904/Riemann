@@ -2,7 +2,7 @@ import math
 import csv
 import matplotlib.pyplot as plt
 from typing import List, Tuple, Any
-from .prime_connection import zeta_series, zeta_euler, generate_primes, prime_error
+from prime_connection import zeta_series, zeta_euler, generate_primes, prime_error
 
 
 def plot_euler_vs_series(
