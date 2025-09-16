@@ -12,5 +12,6 @@ src/riemann.egg-info/dependency_links.txt
 src/riemann.egg-info/entry_points.txt
 src/riemann.egg-info/requires.txt
 src/riemann.egg-info/top_level.txt
+tests/test_odlyzko.py
 tests/test_riemann_siegel.py
 tests/test_zeta.py
