@@ -1,9 +1,11 @@
 import argparse
-from typing import Any
+from typing import Any, List, Tuple
 
 from zeta import zeta
 from utils import write_csv
 from riemann_siegel import find_zeros_riemann_siegel
+from zeros_odlyzko import find_zeros_odlyzko
+from functional_equation import zeta_via_functional, zeta_complete
 
 
 def parse_args() -> Any:
@@ -45,6 +47,37 @@ def parse_args() -> Any:
         "--output", type=str, default="zeros.csv", help="CSV-Datei für Nullstellen"
     )
 
+    # Subparser für Odlyzko–Schönhage-Algorithmus
+    odlyzko = subparsers.add_parser(
+        "odlyzko", help="Nullstellensuche via Odlyzko–Schönhage-Algorithmus"
+    )
+    odlyzko.add_argument("--t-start", type=float, required=True, help="Start t-Wert")
+    odlyzko.add_argument("--t-end", type=float, required=True, help="Ende t-Wert")
+    odlyzko.add_argument(
+        "--precision", type=int, default=50, help="mpmath-Präzision für FFT"
+    )
+    odlyzko.add_argument(
+        "--output",
+        type=str,
+        default="zeros_odlyzko.csv",
+        help="CSV-Datei für Nullstellen",
+    )
+
+    # Subparser für Functional Equation
+    func = subparsers.add_parser(
+        "compute-func", help="Berechnung von ζ(s) über funktionale Gleichung"
+    )
+    func.add_argument(
+        "--s", type=complex, required=True, help="Stelle s im Format a+bj"
+    )
+    func.add_argument(
+        "--method",
+        type=str,
+        choices=["direct", "functional", "auto"],
+        default="auto",
+        help="Auswertungsmethode",
+    )
+
     return parser.parse_args()
 
 
@@ -59,11 +92,30 @@ def main() -> None:
         print(f"Nullstellen gespeichert in {args.output}")
         return
 
-    # Standard-Befehl: ζ(s)-Berechnung
-    results = []
+    if args.command == "odlyzko":
+        zeros = find_zeros_odlyzko(
+            args.t_start, args.t_end, precision=args.precision, output=args.output
+        )
+        write_csv([(z, 0) for z in zeros], args.output)
+        print(f"Nullstellen (Odlyzko) gespeichert in {args.output}")
+        return
+
+    if args.command == "compute-func":
+        s = args.s
+        if args.method == "direct":
+            result = zeta(s)
+        elif args.method == "functional":
+            result = zeta_via_functional(s)
+        else:
+            result = zeta_complete(s)
+        print(f"ζ({s}) = {result}")
+        return
+
+    # Standard-Befehl: ζ(s)-Berechnung über Bereich
+    results: List[Tuple[complex, complex]] = []
     s = args.start
     while s.real <= args.end.real and s.imag <= args.end.imag:
-        val = zeta(s)  # type: Any
+        val = zeta(s)
         results.append((s, val))
         s = complex(s.real + args.step, s.imag + args.step)
 
