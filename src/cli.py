@@ -6,6 +6,9 @@ from utils import write_csv
 from riemann_siegel import find_zeros_riemann_siegel
 from zeros_odlyzko import find_zeros_odlyzko
 from functional_equation import zeta_via_functional, zeta_complete
+from spectral_analysis import load_spacings, spectrum_of_spacings
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def parse_args() -> Any:
@@ -78,6 +81,24 @@ def parse_args() -> Any:
         help="Auswertungsmethode",
     )
 
+    # Subparser für Spektralanalyse
+    spectrum = subparsers.add_parser(
+        "analyze-spectrum", help="Spektralanalyse der Nullstellenabstände"
+    )
+    spectrum.add_argument(
+        "--input",
+        type=str,
+        required=True,
+        help="CSV-Datei mit Spalte 't' für Imaginärteile",
+    )
+    spectrum.add_argument(
+        "--fs", type=float, default=1.0, help="Sampling-Frequenz für PSD"
+    )
+    spectrum.add_argument(
+        "--nperseg", type=int, default=256, help="Segmentlänge für Welch-Methode"
+    )
+    spectrum.add_argument("--plot", action="store_true", help="PSD-Plot anzeigen")
+
     return parser.parse_args()
 
 
@@ -109,6 +130,20 @@ def main() -> None:
         else:
             result = zeta_complete(s)
         print(f"ζ({s}) = {result}")
+        return
+
+    if args.command == "analyze-spectrum":
+        spacings = load_spacings(args.input)
+        f, Pxx = spectrum_of_spacings(spacings, fs=args.fs, nperseg=args.nperseg)
+        if args.plot:
+            plt.semilogy(f, Pxx)
+            plt.xlabel("Frequenz")
+            plt.ylabel("PSD")
+            plt.title("Power Spectral Density der Nullstellenabstände")
+            plt.show()
+        else:
+            write_csv(list(zip(f, Pxx)), "spectrum.csv")
+            print("Spektraldaten gespeichert in spectrum.csv")
         return
 
     # Standard-Befehl: ζ(s)-Berechnung über Bereich
